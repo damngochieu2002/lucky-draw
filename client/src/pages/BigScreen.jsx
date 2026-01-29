@@ -100,6 +100,13 @@ export default function BigScreen() {
     // Get only eligible participants (not yet won)
     const eligibleParticipants = participants.filter(p => p.status !== 'WON');
 
+    // Current prize and remaining count
+    const currentPrize = campaign?.prizes?.[currentPrizeIndex];
+    const prizeWonCount = currentPrize
+        ? participants.filter(p => p.won_prize === currentPrize.name).length
+        : 0;
+    const remainingForPrize = currentPrize ? currentPrize.quantity - prizeWonCount : 0;
+
     const startSpinAnimation = (duration = 5000) => {
         if (eligibleParticipants.length === 0) return;
 
@@ -138,7 +145,6 @@ export default function BigScreen() {
                 const winnerIndex = Math.floor(Math.random() * eligibleParticipants.length);
                 const selected = eligibleParticipants[winnerIndex];
 
-                const currentPrize = campaign?.prizes?.[currentPrizeIndex];
                 if (currentPrize && selected) {
                     // Final slot shows winner name
                     setSlotNames([selected.name, selected.name, selected.name]);
@@ -153,7 +159,7 @@ export default function BigScreen() {
     };
 
     const handleSpin = () => {
-        if (isSpinning || eligibleParticipants.length === 0) return;
+        if (isSpinning || eligibleParticipants.length === 0 || remainingForPrize <= 0) return;
         startSpinAnimation(4000);
     };
 
@@ -165,7 +171,19 @@ export default function BigScreen() {
         }
     };
 
-    const currentPrize = campaign?.prizes?.[currentPrizeIndex];
+    // Auto-advance to next prize if current is exhausted
+    useEffect(() => {
+        if (currentPrize && remainingForPrize <= 0 && !isSpinning && !winner) {
+            // Auto advance after a brief delay
+            const timer = setTimeout(() => {
+                if (campaign?.prizes && currentPrizeIndex < campaign.prizes.length - 1) {
+                    setCurrentPrizeIndex(prev => prev + 1);
+                    setSlotNames(['?', '?', '?']);
+                }
+            }, 500);
+            return () => clearTimeout(timer);
+        }
+    }, [remainingForPrize, currentPrize, isSpinning, winner, campaign, currentPrizeIndex]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 overflow-hidden relative">
@@ -288,7 +306,7 @@ export default function BigScreen() {
                                 🎁 {currentPrize.name}
                             </div>
                             <div className="text-purple-300 mt-2">
-                                Còn {currentPrize.quantity} phần • Giải {currentPrizeIndex + 1} / {campaign?.prizes?.length}
+                                Còn {remainingForPrize} / {currentPrize.quantity} phần • Giải {currentPrizeIndex + 1} / {campaign?.prizes?.length}
                             </div>
                         </motion.div>
                     )}
@@ -353,13 +371,13 @@ export default function BigScreen() {
                     {/* Spin Button */}
                     <motion.button
                         onClick={handleSpin}
-                        disabled={isSpinning || eligibleParticipants.length === 0}
+                        disabled={isSpinning || eligibleParticipants.length === 0 || remainingForPrize <= 0}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         className={`w-48 h-48 md:w-56 md:h-56 rounded-full text-3xl md:text-4xl font-black shadow-2xl transition-all relative overflow-hidden
               ${isSpinning
                                 ? 'bg-gradient-to-r from-purple-600 to-pink-600 cursor-not-allowed'
-                                : eligibleParticipants.length === 0
+                                : (eligibleParticipants.length === 0 || remainingForPrize <= 0)
                                     ? 'bg-gray-700 cursor-not-allowed'
                                     : 'bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 hover:shadow-[0_0_80px_rgba(251,146,60,0.6)] cursor-pointer'}
             `}
@@ -372,8 +390,8 @@ export default function BigScreen() {
                             >
                                 🎰
                             </motion.div>
-                        ) : eligibleParticipants.length === 0 ? (
-                            <span className="text-gray-400 text-2xl">Hết người</span>
+                        ) : (eligibleParticipants.length === 0 || remainingForPrize <= 0) ? (
+                            <span className="text-gray-400 text-2xl">{remainingForPrize <= 0 ? 'Hết giải!' : 'Hết người'}</span>
                         ) : (
                             <span className="text-white drop-shadow-lg">QUAY!</span>
                         )}
