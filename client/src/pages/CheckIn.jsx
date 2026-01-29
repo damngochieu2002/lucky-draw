@@ -22,7 +22,11 @@ export default function CheckIn() {
             setStatus('SUCCESS');
         } catch (err) {
             console.error(err);
-            setError('Failed to check in. Please try again.');
+            if (err.response && err.response.status === 409) {
+                setError('Số điện thoại này đã được sử dụng');
+            } else {
+                setError('Failed to check in. Please try again.');
+            }
             setStatus('ERROR');
         }
     };

@@ -59,9 +59,14 @@ export default function BigScreen() {
             fireConfetti();
         });
 
+        socket.on('participant_deleted', ({ id }) => {
+            setParticipants(prev => prev.filter(p => p.id !== id));
+        });
+
         return () => {
             socket.off('participant_joined');
             socket.off('winner_selected');
+            socket.off('participant_deleted');
         };
     }, [socket, id]);
 

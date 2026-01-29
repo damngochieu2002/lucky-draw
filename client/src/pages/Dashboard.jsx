@@ -14,6 +14,40 @@ export default function Dashboard() {
     const [newType, setNewType] = useState('OFFLINE');
     const [prizes, setPrizes] = useState([{ name: '', quantity: 1 }]);
 
+    // Participant Management State
+    const [showParticipantsModal, setShowParticipantsModal] = useState(false);
+    const [selectedCampaignForParticipants, setSelectedCampaignForParticipants] = useState(null);
+    const [participants, setParticipants] = useState([]);
+
+    const openParticipantsModal = async (campaign) => {
+        setSelectedCampaignForParticipants(campaign);
+        setShowParticipantsModal(true);
+        try {
+            const res = await api.get(`/participants/${campaign.id}`);
+            setParticipants(res.data);
+        } catch (err) {
+            console.error(err);
+            alert('Failed to load participants');
+        }
+    };
+
+    const handleDeleteParticipant = async (participantId) => {
+        if (!window.confirm('Are you sure you want to delete this participant?')) return;
+        try {
+            await api.delete(`/participants/${participantId}`);
+            setParticipants(participants.filter(p => p.id !== participantId));
+        } catch (err) {
+            console.error(err);
+            alert('Failed to delete participant');
+        }
+    };
+
+    const closeParticipantsModal = () => {
+        setShowParticipantsModal(false);
+        setSelectedCampaignForParticipants(null);
+        setParticipants([]);
+    };
+
     useEffect(() => {
         fetchCampaigns();
     }, []);
@@ -118,12 +152,20 @@ export default function Dashboard() {
                                 <span className={`text-xs font-bold px-2 py-1 rounded ${c.type === 'ONLINE' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}`}>
                                     {c.type}
                                 </span>
-                                <button
-                                    onClick={() => openEditModal(c)}
-                                    className="text-xs text-gray-400 hover:text-white transition-colors"
-                                >
-                                    ✏️ Edit
-                                </button>
+                                <div>
+                                    <button
+                                        onClick={() => openParticipantsModal(c)}
+                                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors mr-3"
+                                    >
+                                        👥 Players
+                                    </button>
+                                    <button
+                                        onClick={() => openEditModal(c)}
+                                        className="text-xs text-gray-400 hover:text-white transition-colors"
+                                    >
+                                        ✏️ Edit
+                                    </button>
+                                </div>
                             </div>
                             <h3 className="text-xl font-semibold mb-2 text-white">{c.name}</h3>
                             <div className="mb-4">
@@ -248,6 +290,70 @@ export default function Dashboard() {
                                 </button>
                             </div>
                         </form>
+                    </motion.div>
+                </div>
+            )}
+
+            {/* Participants Modal */}
+            {showParticipantsModal && selectedCampaignForParticipants && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="bg-[#1e1e1e] border border-white/10 rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[90vh] overflow-y-auto"
+                    >
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-white">
+                                Players - {selectedCampaignForParticipants.name}
+                            </h2>
+                            <button onClick={closeParticipantsModal} className="text-gray-400 hover:text-white text-xl">
+                                ✕
+                            </button>
+                        </div>
+
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left border-collapse">
+                                <thead>
+                                    <tr className="border-b border-white/10 text-gray-400 text-sm">
+                                        <th className="py-2 px-4">Name</th>
+                                        <th className="py-2 px-4">Phone</th>
+                                        <th className="py-2 px-4">Status</th>
+                                        <th className="py-2 px-4">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {participants.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="4" className="py-8 text-center text-gray-500">
+                                                No participants yet.
+                                            </td>
+                                        </tr>
+                                    ) : (
+                                        participants.map(p => (
+                                            <tr key={p.id} className="border-b border-white/5 hover:bg-white/5 text-gray-300 text-sm">
+                                                <td className="py-3 px-4 font-medium text-white">{p.name}</td>
+                                                <td className="py-3 px-4">{p.phone || '-'}</td>
+                                                <td className="py-3 px-4">
+                                                    {p.status === 'WON' ? (
+                                                        <span className="text-yellow-400">🏆 {p.won_prize}</span>
+                                                    ) : (
+                                                        <span className="text-green-400">Checked In</span>
+                                                    )}
+                                                </td>
+                                                <td className="py-3 px-4">
+                                                    <button
+                                                        onClick={() => handleDeleteParticipant(p.id)}
+                                                        className="text-red-400 hover:text-red-300 hover:bg-red-500/10 px-3 py-1 rounded transition-colors"
+                                                    >
+                                                        Delete
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </motion.div>
                 </div>
             )}

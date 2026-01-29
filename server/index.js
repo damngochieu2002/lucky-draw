@@ -77,8 +77,16 @@ app.put('/api/campaigns/:id', (req, res) => {
 // Check-in / Add Participant
 app.post('/api/participants', (req, res) => {
     const { campaign_id, name, phone } = req.body;
+
+    // Check for duplicates
+    if (phone) {
+        const existing = db.prepare('SELECT * FROM participants WHERE campaign_id = ? AND phone = ?').get(campaign_id, phone);
+        if (existing) {
+            return res.status(409).json({ error: 'Số điện thoại này đã được sử dụng' });
+        }
+    }
+
     const id = crypto.randomUUID();
-    // Simple unique check could be added here (e.g. by phone + campaign_id)
 
     try {
         const stmt = db.prepare('INSERT INTO participants (id, campaign_id, name, phone) VALUES (?, ?, ?, ?)');
@@ -100,6 +108,26 @@ app.get('/api/participants/:campaignId', (req, res) => {
     const { campaignId } = req.params;
     const participants = db.prepare('SELECT * FROM participants WHERE campaign_id = ?').all(campaignId);
     res.json(participants);
+});
+
+// Delete Participant
+app.delete('/api/participants/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+        const participant = db.prepare('SELECT * FROM participants WHERE id = ?').get(id);
+        if (!participant) {
+            return res.status(404).json({ error: 'Participant not found' });
+        }
+
+        db.prepare('DELETE FROM participants WHERE id = ?').run(id);
+
+        // Notify clients
+        io.to(participant.campaign_id).emit('participant_deleted', { id, campaign_id: participant.campaign_id });
+
+        res.json({ message: 'Deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 // Update Participant Status (e.g. Winner)
