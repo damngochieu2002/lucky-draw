@@ -179,34 +179,34 @@ export default function Dashboard() {
                                 <span className={`text-xs font-bold px-2 py-1 rounded ${c.type === 'ONLINE' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}`}>
                                     {c.type}
                                 </span>
-                                <div className="flex gap-2">
+                                <div className="flex gap-3">
                                     <button
                                         onClick={() => openParticipantsModal(c)}
                                         className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
                                         title="View Players"
                                     >
-                                        👥
+                                        👥 Players
                                     </button>
                                     <button
                                         onClick={() => handleResetWheel(c.id)}
                                         className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
                                         title="Reset Wheel"
                                     >
-                                        🔄
+                                        🔄 Reset
                                     </button>
                                     <button
                                         onClick={() => openEditModal(c)}
                                         className="text-xs text-gray-400 hover:text-white transition-colors"
                                         title="Edit Campaign"
                                     >
-                                        ✏️
+                                        ✏️ Edit
                                     </button>
                                     <button
                                         onClick={() => handleDeleteCampaign(c.id)}
                                         className="text-xs text-red-400 hover:text-red-300 transition-colors"
                                         title="Delete Campaign"
                                     >
-                                        🗑️
+                                        🗑️ Delete
                                     </button>
                                 </div>
                             </div>
