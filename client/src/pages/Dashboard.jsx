@@ -175,42 +175,17 @@ export default function Dashboard() {
                             animate={{ opacity: 1, y: 0 }}
                             className="bg-white/5 border border-white/10 rounded-2xl p-6 backdrop-blur-md hover:bg-white/10 transition-colors"
                         >
-                            <div className="flex justify-between items-start mb-4">
+                            {/* Header with Type Badge */}
+                            <div className="flex justify-between items-center mb-3">
                                 <span className={`text-xs font-bold px-2 py-1 rounded ${c.type === 'ONLINE' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}`}>
                                     {c.type}
                                 </span>
-                                <div className="flex gap-3">
-                                    <button
-                                        onClick={() => openParticipantsModal(c)}
-                                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
-                                        title="View Players"
-                                    >
-                                        👥 Players
-                                    </button>
-                                    <button
-                                        onClick={() => handleResetWheel(c.id)}
-                                        className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
-                                        title="Reset Wheel"
-                                    >
-                                        🔄 Reset
-                                    </button>
-                                    <button
-                                        onClick={() => openEditModal(c)}
-                                        className="text-xs text-gray-400 hover:text-white transition-colors"
-                                        title="Edit Campaign"
-                                    >
-                                        ✏️ Edit
-                                    </button>
-                                    <button
-                                        onClick={() => handleDeleteCampaign(c.id)}
-                                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
-                                        title="Delete Campaign"
-                                    >
-                                        🗑️ Delete
-                                    </button>
-                                </div>
                             </div>
+
+                            {/* Campaign Name */}
                             <h3 className="text-xl font-semibold mb-2 text-white">{c.name}</h3>
+
+                            {/* Prizes */}
                             <div className="mb-4">
                                 <p className="text-sm text-gray-400">Prizes:</p>
                                 <ul className="text-sm text-gray-300 list-disc list-inside">
@@ -220,7 +195,37 @@ export default function Dashboard() {
                                     {c.prizes.length > 3 && <li>...and {c.prizes.length - 3} more</li>}
                                 </ul>
                             </div>
-                            <div className="flex gap-3 mt-4">
+
+                            {/* Action Buttons Row */}
+                            <div className="flex flex-wrap gap-2 mb-4 pt-3 border-t border-white/10">
+                                <button
+                                    onClick={() => openParticipantsModal(c)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-full bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-colors"
+                                >
+                                    👥 Players
+                                </button>
+                                <button
+                                    onClick={() => handleResetWheel(c.id)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-full bg-yellow-500/20 text-yellow-300 hover:bg-yellow-500/30 transition-colors"
+                                >
+                                    🔄 Reset
+                                </button>
+                                <button
+                                    onClick={() => openEditModal(c)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-full bg-gray-500/20 text-gray-300 hover:bg-gray-500/30 transition-colors"
+                                >
+                                    ✏️ Edit
+                                </button>
+                                <button
+                                    onClick={() => handleDeleteCampaign(c.id)}
+                                    className="px-3 py-1.5 text-xs font-medium rounded-full bg-red-500/20 text-red-300 hover:bg-red-500/30 transition-colors"
+                                >
+                                    🗑️ Delete
+                                </button>
+                            </div>
+
+                            {/* Main Action Buttons */}
+                            <div className="flex gap-3">
                                 <Link
                                     to={`/campaign/${c.id}/qr`}
                                     className="flex-1 bg-gray-700 hover:bg-gray-600 text-center py-2 rounded-lg text-sm font-medium transition-colors"
