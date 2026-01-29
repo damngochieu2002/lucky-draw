@@ -48,6 +48,33 @@ export default function Dashboard() {
         setParticipants([]);
     };
 
+    const handleDeleteCampaign = async (campaignId) => {
+        if (!window.confirm('Bạn có chắc muốn xóa campaign này? Tất cả người chơi sẽ bị xóa.')) return;
+        try {
+            await api.delete(`/campaigns/${campaignId}`);
+            fetchCampaigns();
+        } catch (err) {
+            console.error(err);
+            alert('Failed to delete campaign');
+        }
+    };
+
+    const handleResetWheel = async (campaignId) => {
+        if (!window.confirm('Bạn có chắc muốn reset vòng quay? Tất cả người chơi sẽ trở về trạng thái chưa trúng quà.')) return;
+        try {
+            await api.post(`/campaigns/${campaignId}/reset`);
+            alert('Đã reset vòng quay thành công!');
+            // Refresh participants if modal is open
+            if (showParticipantsModal && selectedCampaignForParticipants?.id === campaignId) {
+                const res = await api.get(`/participants/${campaignId}`);
+                setParticipants(res.data);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to reset wheel');
+        }
+    };
+
     useEffect(() => {
         fetchCampaigns();
     }, []);
@@ -152,18 +179,34 @@ export default function Dashboard() {
                                 <span className={`text-xs font-bold px-2 py-1 rounded ${c.type === 'ONLINE' ? 'bg-green-500/20 text-green-400' : 'bg-purple-500/20 text-purple-400'}`}>
                                     {c.type}
                                 </span>
-                                <div>
+                                <div className="flex gap-2">
                                     <button
                                         onClick={() => openParticipantsModal(c)}
-                                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors mr-3"
+                                        className="text-xs text-blue-400 hover:text-blue-300 transition-colors"
+                                        title="View Players"
                                     >
-                                        👥 Players
+                                        👥
+                                    </button>
+                                    <button
+                                        onClick={() => handleResetWheel(c.id)}
+                                        className="text-xs text-yellow-400 hover:text-yellow-300 transition-colors"
+                                        title="Reset Wheel"
+                                    >
+                                        🔄
                                     </button>
                                     <button
                                         onClick={() => openEditModal(c)}
                                         className="text-xs text-gray-400 hover:text-white transition-colors"
+                                        title="Edit Campaign"
                                     >
-                                        ✏️ Edit
+                                        ✏️
+                                    </button>
+                                    <button
+                                        onClick={() => handleDeleteCampaign(c.id)}
+                                        className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                                        title="Delete Campaign"
+                                    >
+                                        🗑️
                                     </button>
                                 </div>
                             </div>

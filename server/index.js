@@ -74,6 +74,47 @@ app.put('/api/campaigns/:id', (req, res) => {
     }
 });
 
+// Delete Campaign
+app.delete('/api/campaigns/:id', (req, res) => {
+    const { id } = req.params;
+    try {
+        const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(id);
+        if (!campaign) {
+            return res.status(404).json({ error: 'Campaign not found' });
+        }
+
+        // Delete all participants first
+        db.prepare('DELETE FROM participants WHERE campaign_id = ?').run(id);
+        // Delete campaign
+        db.prepare('DELETE FROM campaigns WHERE id = ?').run(id);
+
+        res.json({ message: 'Campaign deleted successfully' });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Reset Wheel (Reset all participants to CHECKED_IN status)
+app.post('/api/campaigns/:id/reset', (req, res) => {
+    const { id } = req.params;
+    try {
+        const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(id);
+        if (!campaign) {
+            return res.status(404).json({ error: 'Campaign not found' });
+        }
+
+        // Reset all participants: status back to CHECKED_IN, clear won_prize
+        const result = db.prepare('UPDATE participants SET status = ?, won_prize = NULL WHERE campaign_id = ?').run('CHECKED_IN', id);
+
+        // Notify all clients in this campaign room
+        io.to(id).emit('wheel_reset', { campaign_id: id });
+
+        res.json({ message: 'Wheel reset successfully', updated: result.changes });
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
 // Check-in / Add Participant
 app.post('/api/participants', (req, res) => {
     const { campaign_id, name, phone } = req.body;
